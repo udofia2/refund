@@ -7,24 +7,20 @@ Use --force to drop and recreate all tables before seeding.
 import argparse
 import logging
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.clock import utcnow_naive
 from app.db.base import Base, SessionLocal, engine, init_db
 from app.db.models import Customer, Order, OrderItem
 
 logger = logging.getLogger(__name__)
 
 
-def _utcnow() -> datetime:
-    # Naive UTC, matching the naive DateTime columns.
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
 def _days_ago(days: int) -> datetime:
-    return _utcnow() - timedelta(days=days)
+    return utcnow_naive() - timedelta(days=days)
 
 
 def _add_order(
