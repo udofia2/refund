@@ -39,14 +39,15 @@ export default function RequestForm({
     });
   };
 
-  const invalid = selectedCustomerId === null || text.trim().length === 0;
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <CustomerSelector
         customers={customers}
         value={selectedCustomerId}
-        onChange={onCustomerChange}
+        onChange={(id) => {
+          setCustomerError(null);
+          onCustomerChange(id);
+        }}
         disabled={submitting}
       />
       {customerError && (
@@ -64,7 +65,10 @@ export default function RequestForm({
           rows={4}
           maxLength={2000}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            if (textError) setTextError(null);
+          }}
           placeholder="Describe the issue with your order…"
           disabled={submitting}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
@@ -109,7 +113,7 @@ export default function RequestForm({
 
       <button
         type="submit"
-        disabled={submitting || invalid}
+        disabled={submitting}
         aria-busy={submitting}
         className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
