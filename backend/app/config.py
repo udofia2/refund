@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     llm_api_key: str | None = None
     llm_temperature: float = 0.1
     llm_max_tokens: int = 1024
+    llm_timeout_seconds: int = 20
 
     # Application
     app_env: str = "development"

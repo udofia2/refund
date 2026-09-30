@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.ai.factory import get_provider
 from app.config import settings
 
 router = APIRouter()
@@ -7,4 +8,5 @@ router = APIRouter()
 
 @router.get("/health")
 async def health() -> dict:
-    return {"status": "ok", "provider": settings.llm_provider}
+    provider = get_provider(settings)
+    return {"status": "ok", "provider": provider.name}
