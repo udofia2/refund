@@ -1,13 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import func, select
 
+from app.clock import utcnow_naive
 from app.db.models import Customer, Order, OrderItem
 from app.db.seed import build_seed_data, is_seeded
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def test_seed_creates_15_customers(seeded_db):
@@ -21,7 +18,7 @@ def test_seed_borderline_age_cases(seeded_db):
         c.email: [o.order_date for o in c.orders]
         for c in seeded_db.scalars(select(Customer)).all()
     }
-    now = _utcnow()
+    now = utcnow_naive()
 
     def age_days(dt: datetime) -> int:
         return (now - dt).days
