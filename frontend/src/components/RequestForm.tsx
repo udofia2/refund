@@ -111,6 +111,7 @@ export default function RequestForm({
         </select>
       </div>
 
+      {/* Enabled while invalid on purpose: submit surfaces the inline errors; disabling would hide them. */}
       <button
         type="submit"
         disabled={submitting}
