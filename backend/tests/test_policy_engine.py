@@ -258,3 +258,17 @@ def test_suspicious_indicators_accept_tuple(engine, customer):
     )
     assert decision.decision == "escalated"
     assert RuleCode.SUSPICIOUS_INDICATORS in decision.rule_codes
+
+
+def test_unknown_reason_escalates_not_approves(engine, customer):
+    """Regression (Task 5 Bug #3): an intelligible-looking but unknown reason
+    must NEVER approve via CLEAN_ELIGIBLE — it escalates."""
+    order = make_order()  # delivered, 5 days old, no final sale
+    decision = engine.evaluate(
+        customer,
+        order,
+        make_extracted(reason="unknown"),
+        now=NOW,
+    )
+    assert decision.decision == "escalated"
+    assert decision.rule_codes == (RuleCode.NO_ELIGIBLE_REASON,)
