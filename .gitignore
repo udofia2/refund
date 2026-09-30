@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+backend/data/*.db
+*.db
+
+# Node
+node_modules/
+dist/
+frontend/dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Planning notes (kept local only)
+notes/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
