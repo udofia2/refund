@@ -1,5 +1,6 @@
 import type {
   Customer,
+  Decision,
   Order,
   RefundRequestCreate,
   RefundRequestResponse,
@@ -66,4 +67,25 @@ export async function submitRefundRequest(
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+export interface ListRefundRequestsParams {
+  limit?: number;
+  offset?: number;
+  decision?: Decision;
+}
+
+export async function listRefundRequests(
+  params?: ListRefundRequestsParams,
+): Promise<RefundRequestResponse[]> {
+  const query = new URLSearchParams();
+  if (params?.limit !== undefined) query.set("limit", String(params.limit));
+  if (params?.offset !== undefined) query.set("offset", String(params.offset));
+  if (params?.decision !== undefined) query.set("decision", params.decision);
+  const qs = query.toString();
+  return request(`/api/refund-requests${qs ? `?${qs}` : ""}`);
+}
+
+export async function getRefundRequest(id: number): Promise<RefundRequestResponse> {
+  return request(`/api/refund-requests/${id}`);
 }
