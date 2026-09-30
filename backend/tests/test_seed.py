@@ -75,3 +75,23 @@ def test_seed_idempotent_via_cli_guard(db_session, monkeypatch):
 
     assert seed_mod.main([]) == 0
     assert db_session.scalar(select(func.count(Customer.id))) == first_count
+
+
+def test_seed_customer_ids_match_spec_matrix(seeded_db):
+    """IDs must follow the coverage-matrix numbering (regression guard for
+    the session-insert-order bug where Jack became customer 15)."""
+    expected = {
+        1: "ada.whitfield@example.com",
+        4: "sofia.ramirez@example.com",
+        6: "hannah.osei@example.com",
+        8: "olivia.grant@example.com",
+        11: "jack.odonnell@example.com",
+        12: "amara.diallo@example.com",
+        15: "henry.castellanos@example.com",
+    }
+    for customer_id, email in expected.items():
+        customer = seeded_db.get(Customer, customer_id)
+        assert customer is not None and customer.email == email, (
+            f"customer id {customer_id} != {email}"
+        )
+    assert seeded_db.get(Customer, 11).orders == []

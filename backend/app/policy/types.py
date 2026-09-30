@@ -68,3 +68,9 @@ class PolicyDecision:
     reason: str  # semicolon-joined messages from triggered rules
     rule_codes: tuple[str, ...]
     metadata: dict  # {"rules_evaluated": [...], "inputs_snapshot": {...}}
+
+
+# Note: `suspicious_indicators` is canonical as a tuple (it originates from
+# the frozen ExtractedRefundData in app.ai.types). Rule functions accept both
+# tuple and list defensively; the orchestrator converts to list when building
+# plain dicts for the engine.

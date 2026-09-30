@@ -70,6 +70,7 @@ class RefundRequest(Base):
     decision: Mapped[str | None] = mapped_column(String(20), nullable=True)
     decision_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_response: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), index=True, nullable=False
     )

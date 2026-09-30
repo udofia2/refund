@@ -30,6 +30,9 @@ def _add_order(
     status: str,
     items: list[dict],
 ) -> Order:
+    # Add the customer now so INSERT (and therefore id) order matches the
+    # spec's coverage-matrix numbering.
+    session.add(customer)
     order = Order(
         customer=customer,
         order_date=order_date,
@@ -119,7 +122,7 @@ def build_seed_data(session: Session) -> None:
     ])
 
     # 11. No orders yet -> tests "no order found" handling
-    jack = Customer(name="Jack O'Donnell", email="jack.odonnell@example.com")
+    session.add(Customer(name="Jack O'Donnell", email="jack.odonnell@example.com"))
 
     # 12. Cancelled order -> policy edge case
     amara = Customer(name="Amara Diallo", email="amara.diallo@example.com")
@@ -145,8 +148,8 @@ def build_seed_data(session: Session) -> None:
         {"product_name": "Standing Desk", "price": 500.00},
     ])
 
-    session.add_all([ada, marcus, priya, sofia, ethan, hannah, liam, olivia, noah,
-                     emma, jack, amara, felix, grace, henry])
+    # Customers are added to the session inside _add_order (and for jack
+    # above) so IDs follow the spec's numbering; no bulk add needed.
 
 
 def is_seeded(session: Session) -> bool:

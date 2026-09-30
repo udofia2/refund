@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     # Policy
     refund_max_days: int = 30
     refund_high_value_threshold: float = 500.00
+    refund_duplicate_window_hours: int = 24
+    refund_duplicate_recent_threshold: int = 3
 
     # CORS
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]

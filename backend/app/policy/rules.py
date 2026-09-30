@@ -123,7 +123,9 @@ def rule_high_value(
 
 def rule_suspicious_indicators(extracted_data: dict) -> RuleResult:
     indicators = extracted_data.get("suspicious_indicators")
-    if isinstance(indicators, list) and len(indicators) > 0:
+    # Accept list or tuple: ExtractedRefundData carries a tuple (canonical),
+    # dict payloads from other callers may carry a list.
+    if isinstance(indicators, (list, tuple)) and len(indicators) > 0:
         return RuleResult(
             triggered=True,
             rule_code=RuleCode.SUSPICIOUS_INDICATORS,
@@ -191,7 +193,12 @@ def rule_clean_eligible(order: OrderLike | None, extracted_data: dict) -> RuleRe
     the age window by that point.
     """
     reason = extracted_data.get("reason")
-    if order is not None and isinstance(reason, str) and reason.strip():
+    if (
+        order is not None
+        and isinstance(reason, str)
+        and reason.strip()
+        and reason != "unknown"
+    ):
         return RuleResult(
             triggered=True,
             rule_code=RuleCode.CLEAN_ELIGIBLE,

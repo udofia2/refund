@@ -226,3 +226,14 @@ def test_ai_layer_has_no_forbidden_imports():
         assert not module_scope_sdk.search(source), (
             f"{source_file.name} has module-scope SDK import"
         )
+
+
+# --- Prompt format regression guards (Task 4 fragility note) ---
+
+
+def test_system_extract_format_does_not_raise():
+    SYSTEM_EXTRACT.format(context="{}", message="test")  # must not raise
+
+
+def test_system_response_format_does_not_raise():
+    SYSTEM_RESPONSE.format(decision="approved", reason="r", customer_name="A")

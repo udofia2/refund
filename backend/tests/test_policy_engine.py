@@ -246,3 +246,15 @@ def test_rule_results_are_frozen():
     )
     with pytest.raises(Exception):
         result.triggered = False
+
+
+def test_suspicious_indicators_accept_tuple(engine, customer):
+    """ExtractedRefundData carries indicators as a tuple; the rule must fire."""
+    decision = engine.evaluate(
+        customer,
+        make_order(),
+        make_extracted(suspicious_indicators=("policy_override_attempt",)),
+        now=NOW,
+    )
+    assert decision.decision == "escalated"
+    assert RuleCode.SUSPICIOUS_INDICATORS in decision.rule_codes

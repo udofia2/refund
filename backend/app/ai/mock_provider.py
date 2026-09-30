@@ -89,7 +89,9 @@ class MockProvider(LLMProvider):
                 name=customer_name, reason_clause=reason_clause
             )
         elif decision == "denied":
-            response = _DENIED_TEMPLATE.format(name=customer_name, reason=reason)
+            response = _DENIED_TEMPLATE.format(
+                name=customer_name, reason=reason.rstrip(".")
+            )
         elif decision == "escalated":
             response = _ESCALATED_TEMPLATE.format(name=customer_name)
         else:

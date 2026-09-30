@@ -1,40 +1,16 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from app.db.models import Customer, Order, OrderItem, RefundRequest
-
-
-class CustomerRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    email: str
-    created_at: datetime
+from app.schemas.customer import CustomerRead
+from app.schemas.order import OrderRead
 
 
-class OrderItemRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    product_name: str
-    price: float
-    quantity: int
-    is_final_sale: bool
-    condition: str
-
-
-class OrderRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
+class RefundRequestCreate(BaseModel):
     customer_id: int
-    order_date: datetime
-    total_amount: float
-    status: str
-    items: list[OrderItemRead]
+    request_text: str = Field(min_length=1, max_length=2000)
+    order_id: int | None = None
 
 
 class RefundRequestRead(BaseModel):
@@ -44,7 +20,7 @@ class RefundRequestRead(BaseModel):
     customer_id: int
     order_id: Optional[int]
     request_text: str
-    extracted_data: Optional[dict[str, Any]]
+    extracted_data: Optional[dict]
     decision: Optional[str]
     decision_reason: Optional[str]
     ai_response: Optional[str]
@@ -52,3 +28,7 @@ class RefundRequestRead(BaseModel):
     updated_at: Optional[datetime]
     customer: CustomerRead
     order: Optional[OrderRead]
+
+
+class RefundRequestResponse(RefundRequestRead):
+    ai_provider: Optional[str] = None

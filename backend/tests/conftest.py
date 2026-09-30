@@ -34,9 +34,9 @@ def seeded_db(db_session: Session) -> Session:
 
 
 @pytest.fixture
-def client(db_session: Session):
+def client(seeded_db: Session):
     def override_get_db():
-        yield db_session
+        yield seeded_db
 
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
