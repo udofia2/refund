@@ -14,7 +14,7 @@ function renderDetail(
 }
 
 describe("RefundRequestDetail", () => {
-  it("renders nothing for null + loading=false", () => {
+  it("renders nothing for a null request", () => {
     const { container } = renderDetail();
     expect(container).toBeEmptyDOMElement();
   });
