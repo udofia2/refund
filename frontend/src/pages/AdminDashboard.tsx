@@ -6,12 +6,19 @@ import RefundRequestFilters from "../components/RefundRequestFilters";
 import RefundRequestDetail from "../components/RefundRequestDetail";
 import RefundRequestsTable from "../components/RefundRequestsTable";
 
-interface Fetched {
-  all: RefundRequestResponse[];
-  visible: RefundRequestResponse[];
-}
+type EventLoadMode = "retry" | "refresh";
 
-type EventLoadMode = "retry" | "refresh" | "filter";
+// Pure, module-scope (not component-scope): called from inside applyResult
+// without turning into an exhaustive-deps warning on the mount effect.
+// `all` is the single source of truth; `visible` is derived client-side —
+// the decision filter is client-side because `all` is bounded at 100 rows;
+// revisit if pagination is added.
+function deriveVisible(
+  all: RefundRequestResponse[],
+  filter: Decision | "all",
+): RefundRequestResponse[] {
+  return filter === "all" ? all : all.filter((r) => r.decision === filter);
+}
 
 export default function AdminDashboard() {
   const [allRequests, setAllRequests] = useState<RefundRequestResponse[]>([]);
@@ -23,17 +30,15 @@ export default function AdminDashboard() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const requestSeq = useRef(0);
+  const decisionFilterRef = useRef<Decision | "all">("all");
   const viewButtonRefs = useRef(new Map<number, HTMLButtonElement>());
   const pillsRef = useRef<HTMLDivElement>(null);
   const refreshRef = useRef<HTMLButtonElement>(null);
   const pendingFocus = useRef<"vanished" | "view" | null>(null);
   const pendingViewId = useRef<number | null>(null);
 
-  async function fetchRequests(filter: Decision | "all"): Promise<Fetched> {
-    const all = await listRefundRequests({ limit: 100 });
-    const visible =
-      filter === "all" ? all : await listRefundRequests({ limit: 100, decision: filter });
-    return { all, visible };
+  async function fetchAll(): Promise<RefundRequestResponse[]> {
+    return listRefundRequests({ limit: 100 });
   }
 
   function restoreToPills() {
@@ -45,12 +50,17 @@ export default function AdminDashboard() {
     refreshRef.current?.focus();
   }
 
-  function applyResult(fetched: Fetched, seq: number, closedRowId: number | null) {
+  function applyResult(
+    all: RefundRequestResponse[],
+    seq: number,
+    closedRowId: number | null,
+  ) {
     if (seq !== requestSeq.current) return;
-    setAllRequests(fetched.all);
-    setVisibleRequests(fetched.visible);
+    const visible = deriveVisible(all, decisionFilterRef.current);
+    setAllRequests(all);
+    setVisibleRequests(visible);
     setError(null);
-    if (closedRowId != null && !fetched.visible.some((r) => r.id === closedRowId)) {
+    if (closedRowId != null && !visible.some((r) => r.id === closedRowId)) {
       pendingFocus.current = "vanished";
       setSelectedId(null);
     }
@@ -64,15 +74,15 @@ export default function AdminDashboard() {
   // detail renders from the list row; getRefundRequest kept for a future deep-link route
   useEffect(() => {
     const seq = ++requestSeq.current;
-    fetchRequests("all")
-      .then((fetched) => applyResult(fetched, seq, null))
+    fetchAll()
+      .then((all) => applyResult(all, seq, null))
       .catch((err) => applyError(err, seq))
       .finally(() => {
         if (seq === requestSeq.current) setLoading(false);
       });
   }, []);
 
-  function runEventLoad(mode: EventLoadMode, filter: Decision | "all") {
+  function runEventLoad(mode: EventLoadMode) {
     const seq = ++requestSeq.current;
     if (mode === "retry") {
       setLoading(true);
@@ -82,8 +92,8 @@ export default function AdminDashboard() {
       setRefreshing(true);
       setError(null);
     }
-    fetchRequests(filter)
-      .then((fetched) => applyResult(fetched, seq, selectedId))
+    fetchAll()
+      .then((all) => applyResult(all, seq, selectedId))
       .catch((err) => applyError(err, seq))
       .finally(() => {
         if (seq !== requestSeq.current) return;
@@ -123,7 +133,16 @@ export default function AdminDashboard() {
 
   function handleFilterChange(filter: Decision | "all") {
     setDecisionFilter(filter);
-    runEventLoad("filter", filter);
+    decisionFilterRef.current = filter;
+    // Client-side filtering: zero fetches. Tiles read `all` and don't move.
+    const visible = deriveVisible(allRequests, filter);
+    setVisibleRequests(visible);
+    // Vanished-row close must happen here too — this path used to live only
+    // in applyResult (the fetch path) before filters went client-side.
+    if (selectedId != null && !visible.some((r) => r.id === selectedId)) {
+      pendingFocus.current = "vanished";
+      setSelectedId(null);
+    }
   }
 
   function registerViewButton(id: number) {
@@ -151,7 +170,7 @@ export default function AdminDashboard() {
           <p className="mt-1 text-xs text-red-400">{error}</p>
           <button
             type="button"
-            onClick={() => runEventLoad("retry", decisionFilter)}
+            onClick={() => runEventLoad("retry")}
             className="mt-2 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
           >
             Retry
@@ -165,7 +184,7 @@ export default function AdminDashboard() {
           <RefundRequestFilters
             decision={decisionFilter}
             onDecisionChange={handleFilterChange}
-            onRefresh={() => runEventLoad("refresh", decisionFilter)}
+            onRefresh={() => runEventLoad("refresh")}
             refreshing={refreshing}
             pillsRef={pillsRef}
             refreshRef={refreshRef}

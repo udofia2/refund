@@ -35,7 +35,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let detail = res.statusText;
     try {
       const body = await res.json();
-      if (typeof body.detail === "string") detail = body.detail;
+      if (typeof body.detail === "string") {
+        detail = body.detail;
+      } else if (Array.isArray(body.detail)) {
+        // FastAPI 422 validation shape: [{"loc":…, "msg":…, "type":…}, …]
+        const msgs = body.detail
+          .map((d: { msg?: unknown }) => (typeof d?.msg === "string" ? d.msg : ""))
+          .filter((m: string) => m.length > 0);
+        if (msgs.length > 0) detail = msgs.join("; ");
+      }
     } catch {
       // non-JSON error body — keep statusText
     }

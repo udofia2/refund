@@ -66,7 +66,9 @@ export default function RequestForm({
           maxLength={2000}
           value={text}
           onChange={(e) => {
-            setText(e.target.value);
+            // Sanctioned slice: the maxLength attribute alone doesn't enforce
+            // on paste/script — the slice is the correct production behavior.
+            setText(e.target.value.slice(0, 2000));
             if (textError) setTextError(null);
           }}
           placeholder="Describe the issue with your order…"

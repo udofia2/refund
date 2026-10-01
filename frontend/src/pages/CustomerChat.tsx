@@ -22,6 +22,7 @@ export default function CustomerChat() {
   const [response, setResponse] = useState<RefundRequestResponse | null>(null);
   const [resetToken, setResetToken] = useState(0);
   const responseRef = useRef<HTMLDivElement>(null);
+  const ordersSeq = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,14 +59,22 @@ export default function CustomerChat() {
   }
 
   function handleCustomerChange(id: number) {
+    // Sequence guard: a slow orders response for the previous customer
+    // arriving after the new customer's must not clobber the fresh state
+    // (late-resolve-clobber).
+    const seq = ++ordersSeq.current;
     setSelectedCustomerId(id);
     setOrderIds(null);
     setOrdersError(null);
     listOrdersForCustomer(id)
-      .then((orders) => setOrderIds(orders.map((o) => o.id)))
-      .catch((err) =>
-        setOrdersError(err instanceof Error ? err.message : "Failed to load orders"),
-      );
+      .then((orders) => {
+        if (seq === ordersSeq.current) setOrderIds(orders.map((o) => o.id));
+      })
+      .catch((err) => {
+        if (seq === ordersSeq.current) {
+          setOrdersError(err instanceof Error ? err.message : "Failed to load orders");
+        }
+      });
   }
 
   async function handleSubmit(body: RefundRequestCreate) {
