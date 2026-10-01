@@ -1,3 +1,10 @@
+import os
+
+# Force the suite keyless before any app import: a real key injected into the
+# container environment from the host .env must never turn tests into live LLM
+# calls (factory falls back to the mock provider on an empty key).
+os.environ["LLM_API_KEY"] = ""
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
