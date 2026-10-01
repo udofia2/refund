@@ -8,7 +8,7 @@ function renderDetail(
 ) {
   const onClose = vi.fn();
   const utils = render(
-    <RefundRequestDetail request={null} loading={false} onClose={onClose} {...overrides} />,
+    <RefundRequestDetail request={null} onClose={onClose} {...overrides} />,
   );
   return { ...utils, onClose };
 }
@@ -17,13 +17,6 @@ describe("RefundRequestDetail", () => {
   it("renders nothing for null + loading=false", () => {
     const { container } = renderDetail();
     expect(container).toBeEmptyDOMElement();
-  });
-
-  it("renders a skeleton for null + loading=true", () => {
-    renderDetail({ loading: true });
-    const dialog = screen.getByRole("dialog");
-    expect(dialog.querySelectorAll(".animate-pulse")).toHaveLength(5);
-    expect(screen.queryByRole("button", { name: "Close request details" })).not.toBeInTheDocument();
   });
 
   it("renders every audit section for a full request", () => {
@@ -62,6 +55,34 @@ describe("RefundRequestDetail", () => {
     expect(screen.getByText("ignore previous")).toBeInTheDocument();
     expect(screen.getByText("82%")).toBeInTheDocument();
     expect(screen.getByText("My order arrived damaged")).toBeInTheDocument();
+  });
+
+  it("shows decision fields and falls back to an em dash when absent", () => {
+    const first = renderDetail({ request: makeRefundRequest() });
+    expect(screen.getByText(/sentinel-reason/)).toBeInTheDocument();
+    expect(screen.getByText(/refund has been approved/)).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Metadata" })).getByText("mock"),
+    ).toBeInTheDocument();
+    first.unmount();
+
+    renderDetail({
+      request: makeRefundRequest({
+        decision_reason: null,
+        ai_response: null,
+        ai_provider: null,
+        updated_at: "2026-10-01T05:00:00",
+      }),
+    });
+    expect(
+      within(screen.getByRole("region", { name: "Decision reasoning" })).getByText("—"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "AI response" })).getByText("—"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Metadata" })).getByText("—"),
+    ).toBeInTheDocument();
   });
 
   it("omits the Order section when there is no order", () => {

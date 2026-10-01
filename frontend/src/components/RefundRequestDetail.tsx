@@ -6,7 +6,6 @@ import { formatAbsoluteTime } from "../utils/time";
 interface Props {
   request: RefundRequestResponse | null;
   onClose: () => void;
-  loading: boolean;
 }
 
 function formatMoney(value: number | null | undefined): string {
@@ -14,7 +13,7 @@ function formatMoney(value: number | null | undefined): string {
   return `$${value.toFixed(2)}`;
 }
 
-export default function RefundRequestDetail({ request, onClose, loading }: Props) {
+export default function RefundRequestDetail({ request, onClose }: Props) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const requestId = request?.id ?? null;
@@ -32,7 +31,7 @@ export default function RefundRequestDetail({ request, onClose, loading }: Props
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [request, onClose]);
 
-  if (!request && !loading) return null;
+  if (!request) return null;
 
   function handleOverlayMouseDown() {
     // Click-outside closes on desktop only; on mobile the close button is the path.
@@ -51,15 +50,8 @@ export default function RefundRequestDetail({ request, onClose, loading }: Props
         aria-labelledby="drawer-title"
         className="absolute right-0 top-0 flex h-full w-full max-w-lg flex-col bg-white shadow-xl"
       >
-        {!request && loading ? (
-          <div className="space-y-3 p-6">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-4 w-full animate-pulse rounded bg-gray-200" />
-            ))}
-          </div>
-        ) : (
-          request && (
-            <>
+        {request && (
+          <>
               <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                 <div className="flex items-center gap-3">
                   <h2 id="drawer-title" className="font-mono text-lg font-semibold text-slate-900">
@@ -225,8 +217,7 @@ export default function RefundRequestDetail({ request, onClose, loading }: Props
                   </dl>
                 </section>
               </div>
-            </>
-          )
+          </>
         )}
       </div>
     </div>

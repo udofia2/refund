@@ -209,7 +209,7 @@ export default function AdminDashboard() {
         />
       )}
 
-      <RefundRequestDetail request={selectedRequest} onClose={closeDrawer} loading={false} />
+      <RefundRequestDetail request={selectedRequest} onClose={closeDrawer} />
     </div>
   );
 }
