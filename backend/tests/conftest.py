@@ -7,6 +7,21 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base, get_db
 from app.db.seed import build_seed_data
 from app.main import app
+from app.security.limiter import limiter
+
+
+@pytest.fixture(autouse=True)
+def _rate_limit_off_by_default():
+    """Rate limiting is OFF for every test unless a test opts in (test_rate_limit).
+
+    limiter.reset() verified against the installed slowapi: it exists and resets
+    the in-memory storage (there is no public .storage attribute — only _storage).
+    """
+    prev = limiter.enabled
+    limiter.enabled = False
+    yield
+    limiter.enabled = prev
+    limiter.reset()
 
 
 @pytest.fixture

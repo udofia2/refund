@@ -48,12 +48,18 @@ async def process_refund_request(
     explicit_order_id: int | None,
     now: datetime | None = None,
     duplicate_window_hours: int = 24,
+    pre_extraction_indicators: list[str] | None = None,
 ) -> RefundRequest:
     """Full refund-request pipeline. Returns the persisted RefundRequest row.
 
     Raises HTTPException(404) for unknown customer, HTTPException(403) for an
     order the customer does not own (or that does not exist — same response,
     no existence leak).
+
+    pre_extraction_indicators: API-layer injection markers detected before the
+    provider ran. Merged into the provider's own suspicious_indicators —
+    append-and-dedupe, NEVER overwrite (load-bearing: a provider indicator
+    must survive regardless of what the backstop found, and vice versa).
     """
     now = now if now is not None else utcnow_naive()
 
@@ -98,6 +104,16 @@ async def process_refund_request(
     # must not carry a tuple silently disabling rule_suspicious_indicators)
     extracted_dict = asdict(extracted)
     extracted_dict["suspicious_indicators"] = list(extracted.suspicious_indicators)
+    if pre_extraction_indicators:
+        # Provider indicators first, backstop appended, order-preserving dedupe.
+        extracted_dict["suspicious_indicators"] = list(
+            dict.fromkeys(
+                [
+                    *extracted_dict["suspicious_indicators"],
+                    *pre_extraction_indicators,
+                ]
+            )
+        )
 
     window_start = now - timedelta(hours=duplicate_window_hours)
     recent_request_count = db.scalar(
