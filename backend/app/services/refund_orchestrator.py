@@ -11,10 +11,6 @@ allowed to import from all three inner layers:
 No other module may import all three. Purity guarantees are unchanged:
 app.policy and app.ai never import from app.db, app.ai, app.api, or
 app.services.
-
-Note: FastAPI `async def` endpoints + sync SQLAlchemy Session is acceptable
-for SQLite single-writer scale; would move to AsyncSession + aiosqlite if
-the DB were Postgres under load.
 """
 
 import logging

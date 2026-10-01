@@ -9,7 +9,7 @@ An AI-assisted customer-support refund system: a customer describes a refund req
 **Prerequisites:** Docker + Docker Compose. Nothing else.
 
 ```bash
-git clone https://github.com/<your-username>/worknoon-refund-system.git
+git clone https://github.com/udofia2/refund.git worknoon-refund-system
 cd worknoon-refund-system
 docker compose up --build -d
 docker compose exec backend python -m app.db.seed
