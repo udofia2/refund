@@ -1,6 +1,10 @@
 """Hardened system prompts shared by all providers.
 
 Defined once here so the security posture is provider-independent.
+
+Placeholders use string.Template syntax ($name): the prompts embed a JSON
+schema with literal braces, which str-format style templating would misread
+as placeholder fields.
 """
 
 REASONS = [
@@ -56,17 +60,10 @@ Field rules:
 If the message is empty or unintelligible, return all fields null with
 reason="unknown" and confidence=0.0.
 
-Context: {context}
-Message: {message}"""
+Context: $context
+Message: $message"""
 
-# The JSON schema braces must survive .format() untouched: escape every
-# brace, then restore the two real placeholders.
-SYSTEM_EXTRACT = (
-    _EXTRACT_BODY.replace("{", "{{")
-    .replace("}", "}}")
-    .replace("{{context}}", "{context}")
-    .replace("{{message}}", "{message}")
-)
+SYSTEM_EXTRACT = _EXTRACT_BODY
 
 SYSTEM_RESPONSE = """You write one short customer-facing message explaining a refund decision
 that was ALREADY made by a deterministic policy engine.
@@ -89,6 +86,6 @@ If decision is "escalated": acknowledge the request has been passed to a
 human specialist and will be reviewed within 2 business days. Do not
 promise an outcome.
 
-Decision: {decision}
-Policy reason: {reason}
-Customer name: {customer_name}"""
+Decision: $decision
+Policy reason: $reason
+Customer name: $customer_name"""

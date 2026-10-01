@@ -2,6 +2,7 @@
 
 import json
 import logging
+from string import Template
 
 from app.ai.base import LLMProvider
 from app.ai.prompts import SYSTEM_EXTRACT, SYSTEM_RESPONSE
@@ -30,7 +31,9 @@ class GeminiProvider(LLMProvider):
         self._model = genai.GenerativeModel(self._model_name)
 
     async def extract_refund_data(self, text: str, context: dict) -> ExtractedRefundData:
-        prompt = SYSTEM_EXTRACT.format(context=json.dumps(context), message=text)
+        prompt = Template(SYSTEM_EXTRACT).substitute(
+            context=json.dumps(context), message=text
+        )
         try:
             response = await self._model.generate_content_async(
                 prompt,
@@ -52,7 +55,7 @@ class GeminiProvider(LLMProvider):
         return self._to_extracted(data, text)
 
     async def generate_response(self, decision: str, reason: str, customer_name: str) -> str:
-        prompt = SYSTEM_RESPONSE.format(
+        prompt = Template(SYSTEM_RESPONSE).substitute(
             decision=decision, reason=reason, customer_name=customer_name
         )
         try:

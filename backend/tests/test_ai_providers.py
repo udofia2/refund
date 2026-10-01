@@ -7,6 +7,7 @@ import re
 import sys
 import types
 from pathlib import Path
+from string import Template
 from types import SimpleNamespace
 
 import pytest
@@ -228,12 +229,19 @@ def test_ai_layer_has_no_forbidden_imports():
         )
 
 
-# --- Prompt format regression guards (Task 4 fragility note) ---
+# --- Prompt substitution regression guards (Task 4 fragility note) ---
 
 
-def test_system_extract_format_does_not_raise():
-    SYSTEM_EXTRACT.format(context="{}", message="test")  # must not raise
+def test_system_extract_substitute_does_not_raise_and_braces_survive():
+    rendered = Template(SYSTEM_EXTRACT).substitute(context="{}", message="test")
+    # JSON schema braces are data in string.Template, not placeholders
+    assert '"confidence": 0.9\n}' in rendered
+    assert "Context: {}\nMessage: test" in rendered
 
 
-def test_system_response_format_does_not_raise():
-    SYSTEM_RESPONSE.format(decision="approved", reason="r", customer_name="A")
+def test_system_response_substitute_preserves_value_braces():
+    rendered = Template(SYSTEM_RESPONSE).substitute(
+        decision="approved", reason="x {y} z", customer_name="A"
+    )
+    assert "Policy reason: x {y} z" in rendered
+    assert "Customer name: A" in rendered

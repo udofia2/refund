@@ -7,6 +7,7 @@ rules as the real providers (tone, length, "policy" word-rule).
 
 import logging
 import re
+from string import Template
 
 from app.ai.base import LLMProvider
 from app.ai.prompts import SYSTEM_RESPONSE
@@ -22,18 +23,18 @@ AMOUNT_RE = re.compile(r"\$?(\d+(?:\.\d{1,2})?)\s*(?:dollars|usd)?", re.IGNORECA
 ORDER_ID_RE = re.compile(r"order\s*#?\s*(\d+)", re.IGNORECASE)
 
 _APPROVED_TEMPLATE = (
-    "Hi {name}, good news — your refund has been approved{reason_clause}. "
+    "Hi $name, good news — your refund has been approved$reason_clause. "
     "The amount will be returned to your original payment method shortly. "
     "Reply to this message if you have any questions."
 )
 _DENIED_TEMPLATE = (
-    "Hi {name}, after reviewing your request we are unable to approve this "
-    "refund. Per our refund policy: {reason}. If you believe this is a "
+    "Hi $name, after reviewing your request we are unable to approve this "
+    "refund. Per our refund policy: $reason. If you believe this is a "
     "mistake or have new information, please reply and our team will take "
     "another look."
 )
 _ESCALATED_TEMPLATE = (
-    "Hi {name}, thanks for reaching out. Your request needs a quick review "
+    "Hi $name, thanks for reaching out. Your request needs a quick review "
     "from one of our specialists. We will get back to you within 2 business "
     "days — no action is needed from you in the meantime."
 )
@@ -85,17 +86,17 @@ class MockProvider(LLMProvider):
     async def generate_response(self, decision: str, reason: str, customer_name: str) -> str:
         if decision == "approved":
             reason_clause = f" ({reason})" if reason and reason != "unknown" else ""
-            response = _APPROVED_TEMPLATE.format(
+            response = Template(_APPROVED_TEMPLATE).substitute(
                 name=customer_name, reason_clause=reason_clause
             )
         elif decision == "denied":
-            response = _DENIED_TEMPLATE.format(
+            response = Template(_DENIED_TEMPLATE).substitute(
                 name=customer_name, reason=reason.rstrip(".")
             )
         elif decision == "escalated":
-            response = _ESCALATED_TEMPLATE.format(name=customer_name)
+            response = Template(_ESCALATED_TEMPLATE).substitute(name=customer_name)
         else:
-            response = _ESCALATED_TEMPLATE.format(name=customer_name)
+            response = Template(_ESCALATED_TEMPLATE).substitute(name=customer_name)
 
         logger.debug("MockProvider generated response: %s", response)
         return response

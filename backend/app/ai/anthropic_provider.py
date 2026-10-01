@@ -2,6 +2,7 @@
 
 import json
 import logging
+from string import Template
 
 from app.ai.base import LLMProvider
 from app.ai.prompts import SYSTEM_EXTRACT, SYSTEM_RESPONSE
@@ -56,7 +57,9 @@ class AnthropicProvider(LLMProvider):
                 model=self._model,
                 temperature=self._temperature,
                 max_tokens=self._max_tokens,
-                system=SYSTEM_EXTRACT.format(context=json.dumps(context), message=text),
+                system=Template(SYSTEM_EXTRACT).substitute(
+                    context=json.dumps(context), message=text
+                ),
                 messages=[{"role": "user", "content": text}],
                 tools=[EXTRACT_TOOL],
                 tool_choice={"type": "tool", "name": "extract_refund"},
@@ -75,7 +78,7 @@ class AnthropicProvider(LLMProvider):
                 model=self._model,
                 temperature=self._temperature,
                 max_tokens=self._max_tokens,
-                system=SYSTEM_RESPONSE.format(
+                system=Template(SYSTEM_RESPONSE).substitute(
                     decision=decision, reason=reason, customer_name=customer_name
                 ),
                 messages=[{"role": "user", "content": "Write the customer message."}],

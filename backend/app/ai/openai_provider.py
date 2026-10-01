@@ -2,6 +2,7 @@
 
 import json
 import logging
+from string import Template
 
 from app.ai.base import LLMProvider
 from app.ai.prompts import SYSTEM_EXTRACT, SYSTEM_RESPONSE
@@ -60,7 +61,7 @@ class OpenAIProvider(LLMProvider):
                 temperature=self._temperature,
                 max_tokens=self._max_tokens,
                 messages=[
-                    {"role": "system", "content": SYSTEM_EXTRACT.format(
+                    {"role": "system", "content": Template(SYSTEM_EXTRACT).substitute(
                         context=json.dumps(context), message=text)},
                     {"role": "user", "content": text},
                 ],
@@ -87,7 +88,7 @@ class OpenAIProvider(LLMProvider):
                 temperature=self._temperature,
                 max_tokens=self._max_tokens,
                 messages=[
-                    {"role": "system", "content": SYSTEM_RESPONSE.format(
+                    {"role": "system", "content": Template(SYSTEM_RESPONSE).substitute(
                         decision=decision, reason=reason, customer_name=customer_name)},
                 ],
             )
