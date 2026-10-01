@@ -3,6 +3,7 @@ guards, and structural boundaries. No API keys required — real providers are
 exercised via stubbed SDKs only.
 """
 
+import asyncio
 import re
 import sys
 import types
@@ -18,7 +19,7 @@ from app.ai.gemini_provider import GeminiProvider
 from app.ai.mock_provider import MockProvider
 from app.ai.openai_provider import OpenAIProvider
 from app.ai.prompts import SYSTEM_EXTRACT, SYSTEM_RESPONSE
-from app.ai.types import ExtractedRefundData
+from app.ai.types import ExtractedRefundData, LLMError
 from app.config import Settings
 
 AI_DIR = Path(__file__).resolve().parent.parent / "app" / "ai"
@@ -144,6 +145,15 @@ def test_factory_gemini_with_key(monkeypatch):
     assert isinstance(instance, GeminiProvider)
     # The provider must actually initialize against the SDK, not bypass it.
     assert configure_calls == [{"api_key": "test-key"}]
+
+    async def _boom(*_args, **_kwargs):
+        raise RuntimeError("transport down")
+
+    instance._model = SimpleNamespace(generate_content_async=_boom)
+    with pytest.raises(LLMError):
+        asyncio.run(
+            instance.extract_refund_data("refund", {"known_order_ids": [1]})
+        )
 
 
 def test_factory_openai_with_key(monkeypatch):

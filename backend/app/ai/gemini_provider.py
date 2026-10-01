@@ -44,8 +44,6 @@ class GeminiProvider(LLMProvider):
                 request_options={"timeout": self._timeout * 1000},
             )
         except Exception as exc:
-            if self._is_safety_block(response):
-                raise LLMRefusalError("Gemini safety filter blocked the request") from exc
             raise LLMError(f"Gemini extraction failed: {exc}") from exc
 
         if self._is_safety_block(response):
