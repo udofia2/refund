@@ -85,6 +85,8 @@ Three layers, strictly separated:
 
 `backend/app/policy/rules.py` is the single source of refund truth.
 
+The end-to-end journey — request → policy decision → admin review — is diagrammed in [`user-journey.md`](user-journey.md).
+
 ## AI Integration
 
 **Two-call pattern.** Each request makes two strictly separated LLM calls:
@@ -203,6 +205,7 @@ frontend/
   vite.config.ts   # vitest + coverage thresholds
 docker-compose.yml # backend + frontend, named SQLite volume
 .env.example       # every setting documented inline
+user-journey.md    # Mermaid flowchart: refund request → decision → admin flow
 ```
 
 ## Development
